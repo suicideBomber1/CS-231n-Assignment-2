@@ -304,7 +304,7 @@ class FullyConnectedNet(object):
         sum_weights_sq = 0.0
         
         for i in range(1, num_layers+1):
-            sum_weights_sq += np.sum(np.dot(self.params['W%d' %i], self.params['W%d' %i].T))
+            sum_weights_sq += np.sum(self.params['W%d' %i]*self.params['W%d' %i])
             
         reg_loss = 0.5*self.reg*sum_weights_sq
         
