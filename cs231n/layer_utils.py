@@ -104,3 +104,21 @@ def conv_relu_pool_backward(dout, cache):
     da = relu_backward(ds, relu_cache)
     dx, dw, db = conv_backward_fast(da, conv_cache)
     return dx, dw, db
+
+# Inserted BN Layer just before Non-Linearity.
+
+def affine_batchnorm_relu_forward(x, w, b, gamma, beta, bn_param):
+    out , af_cache = affine_forward(x, w, b)
+    out , bn_cache = batchnorm_forward(out, gamma, beta, bn_param)
+    out, relu_cache = relu_forward(out)
+    cache = (af_cache, bn_cache, relu_cache)
+    return out, cache
+
+def affine_batchnorm_relu_backward(dout, cache):
+    af_cache, bn_cache, relu_cache = cache
+    dout = relu_backward(dout, relu_cache)
+    dout, dgamma, dbeta = batchnorm_backward(dout, bn_cache)
+    dx, dw, db = affine_backward(dout, af_cache)
+    return dx, dw, db, np.sum(dgamma), np.sum(dbeta)
+
+
