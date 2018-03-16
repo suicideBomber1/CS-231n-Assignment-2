@@ -122,3 +122,21 @@ def affine_batchnorm_relu_backward(dout, cache):
     return dx, dw, db, np.sum(dgamma), np.sum(dbeta)
 
 
+# (Affine-ReLU-Dropout) * [L-1]- Affine- Softmax
+
+def affine_relu_dropout_forward(x, w, b, dropout_param):
+    out, affine_relu_cache = affine_relu_forward(x, w, b)
+    out, dropout_cache = dropout_forward(out, dropout_param)
+    cache = (affine_relu_cache, dropout_cache)
+    return out, cache
+
+
+def affine_relu_dropout_backward(dout, cache):
+    affine_relu_cache, dropout_cache = cache
+    dout = dropout_backward(dout, dropout_cache)
+    dx, dw, db = affine_relu_backward(dout, affine_relu_cache)
+    return dx, dw, db
+
+
+
+

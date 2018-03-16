@@ -155,7 +155,7 @@ class FullyConnectedNet(object):
     """
 
     def __init__(self, hidden_dims, input_dim=3*32*32, num_classes=10,
-                 dropout=0, use_batchnorm=True, reg=0.0,
+                 dropout=0, use_batchnorm=False, reg=0.0,
                  weight_scale=1e-2, dtype=np.float32, seed=None):
         """
         Initialize a new FullyConnectedNet.
@@ -272,7 +272,13 @@ class FullyConnectedNet(object):
         
         scores = X
         
-        if self.use_batchnorm:
+        if self.use_dropout:
+            for i in range(1, num_layers):
+                scores, cache[i] = affine_relu_dropout_forward(scores, self.params['W%d' %i], self.params['b%d' %i],\
+                                                                 self.dropout_param)
+            scores , cache[num_layers] = affine_forward(scores, self.params['W%d' %num_layers], self.params['b%d' %num_layers])
+        
+        elif self.use_batchnorm:
             for i in range(1, num_layers):
                 scores, cache[i] = affine_batchnorm_relu_forward(scores, self.params['W%d' %i], self.params['b%d' %i],\
                                                                  self.params['gamma%d' %i], self.params['beta%d' %i],\
@@ -326,7 +332,14 @@ class FullyConnectedNet(object):
         dout, grads['W%d' %num_layers], grads['b%d' %num_layers] = affine_backward(dscores, cache[num_layers])
         grads['W%d' %num_layers] += self.reg*(self.params['W%d' %num_layers])
         
-        if self.use_batchnorm:
+        if self.use_dropout:
+            for i in reversed(range(1, num_layers)):
+                dout, grads['W%d' %i], grads['b%d' %i] = \
+                affine_relu_dropout_backward(dout, cache[i])
+                grads['W%d' %i] += self.reg*(self.params['W%d' %i])
+            
+        
+        elif self.use_batchnorm:
             for i in reversed(range(1, num_layers)):
                 dout, grads['W%d' %i], grads['b%d' %i], grads['gamma%d' %i], grads['beta%d' %i] = \
                 affine_batchnorm_relu_backward(dout, cache[i])
